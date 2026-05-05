@@ -1,0 +1,78 @@
+# stream_deck_weather_announce.yaml
+# Announces a full weather forecast on the office Sonos including pool temp,
+# hot tub temp, swim recommendation, and hot tub conditions with toque and
+# shovelling suggestions when relevant.
+#
+# Swim logic: air temp >= 24C AND wind <= 19 km/h AND sunny/partly cloudy
+# Hot tub logic: wind <= 19 km/h (always good otherwise)
+#   - Under 5C outside: suggests wearing a toque
+#   - Snowing: warns you may need to shovel a path
+#
+# YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+#   Find it: Settings > Devices & Services > your Sonos > entity ID
+#   Example: media_player.office_sonos
+#
+# YOUR_WEATHER_ENTITY: Your weather integration entity
+#   Find it: Settings > Devices & Services > weather integrations
+#   Example: weather.openweathermap
+#
+# YOUR_TEMP_SENSOR: Air temperature sensor from your weather integration
+#   Find it: Settings > Devices & Services > your weather device > sensor entities
+#   Example: sensor.openweathermap_temperature
+#
+# YOUR_POOL_TEMP_SENSOR: Pool water temperature sensor entity ID
+#   Find it: Settings > Devices & Services > your pool sensor
+#   Example: sensor.pool_water_temperature
+#
+# YOUR_TUB_TEMP_SENSOR: Hot tub water temperature sensor entity ID
+#   Find it: Settings > Devices & Services > your tub sensor
+#   Example: sensor.hot_tub_current_temperature
+
+stream_deck_weather_announce:
+  alias: Stream Deck Weather Announcement
+  description: >
+    Announces weather forecast on office Sonos. Includes current conditions,
+    wind speed, pool temp, hot tub temp, swim recommendation, and hot tub
+    conditions with toque and shovelling suggestions.
+  mode: single
+  sequence:
+    - variables:
+        # YOUR_TEMP_SENSOR: Air temperature sensor entity ID
+        air_temp: "{{ states('YOUR_TEMP_SENSOR') | float(0) | round(1) }}"
+        # YOUR_WEATHER_ENTITY: Weather integration entity ID
+        condition: "{{ states('YOUR_WEATHER_ENTITY') }}"
+        wind_speed: "{{ state_attr('YOUR_WEATHER_ENTITY', 'wind_speed') | float(0) }}"
+        # YOUR_POOL_TEMP_SENSOR: Pool water temperature sensor entity ID
+        pool_temp: "{{ states('YOUR_POOL_TEMP_SENSOR') | float(0) | round(1) }}"
+        # YOUR_TUB_TEMP_SENSOR: Hot tub water temperature sensor entity ID
+        tub_temp: "{{ states('YOUR_TUB_TEMP_SENSOR') | float(0) | round(1) }}"
+        swim_good: >-
+          {{ states('YOUR_TEMP_SENSOR') | float(0) >= 24
+             and state_attr('YOUR_WEATHER_ENTITY', 'wind_speed') | float(0) <= 19
+             and states('YOUR_WEATHER_ENTITY') in ['sunny', 'partlycloudy', 'clear-night'] }}
+        tub_wind_ok: >-
+          {{ state_attr('YOUR_WEATHER_ENTITY', 'wind_speed') | float(0) <= 19 }}
+        tub_cold: >-
+          {{ states('YOUR_TEMP_SENSOR') | float(0) < 5 }}
+        tub_snowing: >-
+          {{ states('YOUR_WEATHER_ENTITY') in ['snowy', 'snowy-rainy', 'hail'] }}
+    - service: tts.speak
+      data:
+        cache: false
+        # YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+        media_player_entity_id: YOUR_SONOS_ENTITY
+        message: >-
+          Current conditions: {{ condition | replace('-', ' ') | title }},
+          {{ air_temp }} degrees.
+          Wind is {{ wind_speed }} kilometres per hour.
+          Pool temperature is {{ pool_temp }} degrees.
+          Hot tub is at {{ tub_temp }} degrees.
+          {% if swim_good %}Conditions look good for a swim today.
+          {% else %}Not ideal for swimming today.{% endif %}
+          {% if tub_wind_ok %}Hot tub conditions are good.
+            {% if tub_cold %} Bundle up, you may want to wear a toque.{% endif %}
+            {% if tub_snowing %} You might need to shovel a path out there too.{% endif %}
+          {% else %}Wind is a bit strong for the hot tub today.{% endif %}
+      target:
+        # Use tts.piper for local TTS or tts.home_assistant_cloud for Nabu Casa
+        entity_id: tts.piper

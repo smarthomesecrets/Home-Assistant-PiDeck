@@ -1,0 +1,26 @@
+# stream_deck_package_announce.yaml
+# Plays a TTS announcement on the porch speaker telling delivery drivers
+# where to leave packages.
+#
+# YOUR_PORCH_SONOS_ENTITY: Entity ID of your porch or front door speaker
+#   Find it: Settings > Devices & Services > your speaker > entity ID
+#   Example: media_player.porch_sonos
+#
+# Adjust the message text to match your actual delivery drop location.
+
+stream_deck_package_announce:
+  alias: Stream Deck Package Announcement
+  description: >
+    Plays a TTS message on the porch speaker with package delivery instructions.
+  mode: single
+  sequence:
+    - service: tts.speak
+      data:
+        cache: false
+        # Adjust this message to match your actual delivery location
+        message: Please leave the package behind the corner pillar.
+        # YOUR_PORCH_SONOS_ENTITY: Porch or front door speaker entity ID
+        media_player_entity_id: YOUR_PORCH_SONOS_ENTITY
+      target:
+        # Use tts.piper for local TTS or tts.home_assistant_cloud for Nabu Casa
+        entity_id: tts.piper

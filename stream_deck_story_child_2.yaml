@@ -1,0 +1,61 @@
+# stream_deck_story_child_2.yaml
+# Generates a unique children's adventure story using the Claude conversation agent.
+# YOUR_CHILD_2_NAME is the main character. Their sibling and pet always join the adventure.
+# The story always ends happily with everyone returning home safely.
+# Title is announced first, then the full story plays via Piper TTS on office Sonos.
+#
+# Story generation takes 8-10 seconds before audio begins.
+# Piper TTS has no character limit — full story length is supported.
+# Nabu Casa cloud TTS has a ~4000 character limit and may cut stories short.
+#
+# YOUR_CONVERSATION_AGENT: Claude conversation agent entity ID
+#   Find it: Settings > Voice Assistants > your Claude agent
+#   Example: conversation.claude_conversation
+#
+# YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+#   Example: media_player.office_sonos
+#
+# Customise the prompt text to match your children's names, ages, sibling names,
+# and pet name. Keep the title format instruction so the script can parse it correctly.
+
+stream_deck_story_child_2:
+  alias: Stream Deck Story - Child 2
+  description: >
+    Generates a unique adventure story with YOUR_CHILD_2_NAME as main character
+    using Claude conversation agent. Reads via Piper TTS on office Sonos.
+  mode: single
+  sequence:
+    - service: conversation.process
+      data:
+        # YOUR_CONVERSATION_AGENT: Claude conversation agent entity ID
+        agent_id: YOUR_CONVERSATION_AGENT
+        text: >-
+          Write a children's adventure story of exactly 700 to 900 words.
+          The main character is YOUR_CHILD_2_NAME, a YOUR_CHILD_2_AGE year old boy.
+          His YOUR_CHILD_2_AGE_RELATION sister YOUR_CHILD_1_NAME and their dog YOUR_PET_NAME
+          join him on the adventure. The adventure should be completely random and creative
+          each time. It could involve magical forests, space, underwater kingdoms, dinosaurs,
+          friendly giants, enchanted castles, talking animals, or anything imaginative.
+          The story must always end happily with YOUR_CHILD_2_NAME, YOUR_CHILD_1_NAME,
+          and YOUR_PET_NAME returning home safely to mom and dad. Write the story in a warm
+          engaging style perfect for young children. Begin with a creative title on the first
+          line in the format 'Title: [story title]' then a blank line then the story.
+          Do not include any chapter markers, section breaks, or narration cues.
+          Just the title line then the story as plain flowing text.
+      response_variable: story_response
+    - variables:
+        story_title: >-
+          {{ story_response.response.speech.plain.speech.split('\n')[0]
+             | replace('Title: ', '') | trim }}
+        story_body: >-
+          {{ story_response.response.speech.plain.speech.split('\n')[2:]
+             | join(' ') | trim }}
+    - service: tts.speak
+      data:
+        cache: false
+        # YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+        media_player_entity_id: YOUR_SONOS_ENTITY
+        # YOUR_CHILD_2_NAME: Replace with your child's name
+        message: "YOUR_CHILD_2_NAME's Adventure... {{ story_title }}. {{ story_body }}"
+      target:
+        entity_id: tts.piper

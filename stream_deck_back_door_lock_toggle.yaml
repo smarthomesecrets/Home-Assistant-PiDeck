@@ -1,0 +1,32 @@
+# stream_deck_back_door_lock_toggle.yaml
+# Toggles the back door lock between locked and unlocked.
+# The Stream Deck button reads current lock state and renders
+# a green filled lock icon when locked and orange open lock when unlocked.
+#
+# YOUR_BACK_DOOR_LOCK: Back or kitchen door lock entity ID
+#   Find it: Settings > Devices & Services > your lock device
+#   Example: lock.kitchen_back_door
+
+stream_deck_back_door_lock_toggle:
+  alias: Stream Deck Back Door Lock Toggle
+  description: Toggles back door lock between locked and unlocked.
+  mode: single
+  sequence:
+    - choose:
+        - conditions:
+            - condition: state
+              # YOUR_BACK_DOOR_LOCK: Back door lock entity ID
+              entity_id: YOUR_BACK_DOOR_LOCK
+              state: locked
+          sequence:
+            - service: lock.unlock
+              target:
+                entity_id: YOUR_BACK_DOOR_LOCK
+        - conditions:
+            - condition: state
+              entity_id: YOUR_BACK_DOOR_LOCK
+              state: unlocked
+          sequence:
+            - service: lock.lock
+              target:
+                entity_id: YOUR_BACK_DOOR_LOCK

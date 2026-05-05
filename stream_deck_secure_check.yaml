@@ -1,0 +1,214 @@
+# stream_deck_secure_check.yaml
+# Reads full home security status on office Sonos.
+# Only names problem locks (unlocked/unavailable/unknown).
+# Garage doors reported as a single sentence.
+# Lights reported per floor, skipping floors with nothing on.
+# Simultaneously sends a detailed lights-on list to iPhone.
+#
+# Customize the lock list, garage covers, light entities, person entities,
+# and backyard sensors to match your own setup.
+#
+# YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+# YOUR_IPHONE_NOTIFY: iPhone notification service
+#   Example: notify.mobile_app_iphone
+# YOUR_FRONT_DOOR_LOCK: Front door lock entity ID
+# YOUR_BACK_DOOR_LOCK: Kitchen/back door lock entity ID
+# YOUR_LOCK_3 through YOUR_LOCK_6: Additional lock entity IDs (add or remove as needed)
+# YOUR_GARAGE_LEFT: Left garage door cover entity ID
+# YOUR_GARAGE_RIGHT: Right garage door cover entity ID
+# YOUR_PERSON_1: Your HA person entity (e.g. person.your_name)
+# YOUR_PERSON_2: Second person entity (e.g. person.your_partner)
+# YOUR_PERSON_1_NAME: Display name for person 1 (e.g. your name)
+# YOUR_PERSON_2_NAME: Display name for person 2 (e.g. your partner name)
+# YOUR_BACKYARD_SENSOR: Binary sensor for backyard person detection
+# YOUR_PET_SENSOR: Binary sensor for backyard animal/pet detection
+# YOUR_PET_NAME: Your pet's name (e.g. Clarke)
+#
+# For the lights_on, main_floor_count, second_floor_count, and basement_count
+# variables: replace the light and switch entity IDs with your own.
+# Use light groups where available to avoid counting individual bulbs.
+# Include switch entities for rooms where the ceiling light is a smart switch
+# rather than a smart bulb.
+
+stream_deck_secure_check:
+  alias: Stream Deck Secure Check
+  description: >
+    Reads full security status on office Sonos. Problem locks only, smart garage
+    summary, lights per floor skipping empty floors. Sends lights detail to iPhone.
+  mode: single
+  sequence:
+    - variables:
+        lock_issues: >-
+          {% set locks = [
+            ('Front Door', states('YOUR_FRONT_DOOR_LOCK')),
+            ('Back Door', states('YOUR_BACK_DOOR_LOCK')),
+            ('YOUR_LOCK_3_NAME', states('YOUR_LOCK_3')),
+            ('YOUR_LOCK_4_NAME', states('YOUR_LOCK_4')),
+            ('YOUR_LOCK_5_NAME', states('YOUR_LOCK_5')),
+            ('YOUR_LOCK_6_NAME', states('YOUR_LOCK_6'))
+          ] %}
+          {% set problems = [] %}
+          {% for name, state in locks %}
+            {% if state == 'unlocked' %}
+              {% set problems = problems + [name + ' is unlocked'] %}
+            {% endif %}
+            {% if state == 'unavailable' %}
+              {% set problems = problems + [name + ' is unavailable, battery may need replacing'] %}
+            {% endif %}
+            {% if state == 'unknown' %}
+              {% set problems = problems + [name + ' is reporting unknown'] %}
+            {% endif %}
+          {% endfor %}
+          {{ problems | join('. ') }}
+        lock_problem_count: >-
+          {% set locks = [
+            states('YOUR_FRONT_DOOR_LOCK'),
+            states('YOUR_BACK_DOOR_LOCK'),
+            states('YOUR_LOCK_3'),
+            states('YOUR_LOCK_4'),
+            states('YOUR_LOCK_5'),
+            states('YOUR_LOCK_6')
+          ] %}
+          {{ locks | select('in', ['unlocked', 'unavailable', 'unknown']) | list | count }}
+        garage_text: >-
+          {% set left = states('YOUR_GARAGE_LEFT') %}
+          {% set right = states('YOUR_GARAGE_RIGHT') %}
+          {% if left == 'closed' and right == 'closed' %}Garage doors are closed.
+          {% elif left != 'closed' and right != 'closed' %}Both garage doors are open.
+          {% elif left != 'closed' %}Left garage door is open.
+          {% else %}Right garage door is open.
+          {% endif %}
+        # lights_on: full list of light/switch entities to check
+        # Replace these with your own light and switch entity IDs
+        # Use group entities where available (e.g. light.all_basement_pots)
+        # to avoid double-counting individual bulbs
+        lights_on: >-
+          {% set checked = [
+            ('Kitchen Counter', 'light.YOUR_KITCHEN_COUNTER_LIGHT'),
+            ('Kitchen Pots', 'light.YOUR_KITCHEN_POTS'),
+            ('Great Room', 'light.YOUR_GREAT_ROOM_LIGHT'),
+            ('Dining Room', 'light.YOUR_DINING_ROOM_LIGHT'),
+            ('Hallway', 'light.YOUR_HALLWAY_LIGHT'),
+            ('Foyer', 'switch.YOUR_FOYER_SWITCH'),
+            ('Mudroom', 'light.YOUR_MUDROOM_LIGHT'),
+            ('Office Light', 'light.YOUR_OFFICE_LIGHT'),
+            ('Floor Lamp', 'light.YOUR_FLOOR_LAMP'),
+            ('Desk Lamp', 'light.YOUR_DESK_LAMP'),
+            ('Master Bed', 'light.YOUR_MASTER_BED_LIGHT'),
+            ('Master Ensuite', 'light.YOUR_ENSUITE_LIGHT'),
+            ('Kids Room 1', 'light.YOUR_KIDS_ROOM_1_LIGHT'),
+            ('Kids Room 2', 'light.YOUR_KIDS_ROOM_2_LIGHT'),
+            ('Kids Bathroom', 'light.YOUR_KIDS_BATHROOM_LIGHT'),
+            ('Basement Pots', 'light.YOUR_BASEMENT_POTS'),
+            ('Basement Bedroom', 'light.YOUR_BASEMENT_BED_LIGHT'),
+            ('Media Room', 'light.YOUR_MEDIA_ROOM_LIGHT'),
+            ('Garage', 'light.YOUR_GARAGE_LIGHT')
+          ] %}
+          {% set on_lights = [] %}
+          {% for name, entity in checked %}
+            {% if states(entity) == 'on' %}
+              {% set on_lights = on_lights + [name] %}
+            {% endif %}
+          {% endfor %}
+          {{ on_lights | join(', ') }}
+        # main_floor_count: list your main floor light/switch entity IDs here
+        main_floor_count: >-
+          {% set checked = [
+            'light.YOUR_KITCHEN_COUNTER_LIGHT',
+            'light.YOUR_KITCHEN_POTS',
+            'light.YOUR_GREAT_ROOM_LIGHT',
+            'light.YOUR_DINING_ROOM_LIGHT',
+            'light.YOUR_HALLWAY_LIGHT',
+            'switch.YOUR_FOYER_SWITCH',
+            'light.YOUR_MUDROOM_LIGHT',
+            'light.YOUR_OFFICE_LIGHT',
+            'light.YOUR_FLOOR_LAMP',
+            'light.YOUR_DESK_LAMP'
+          ] %}
+          {{ checked | select('is_state', 'on') | list | count }}
+        # second_floor_count: list your second floor light/switch entity IDs here
+        second_floor_count: >-
+          {% set checked = [
+            'light.YOUR_MASTER_BED_LIGHT',
+            'light.YOUR_ENSUITE_LIGHT',
+            'light.YOUR_KIDS_ROOM_1_LIGHT',
+            'light.YOUR_KIDS_ROOM_2_LIGHT',
+            'light.YOUR_KIDS_BATHROOM_LIGHT'
+          ] %}
+          {{ checked | select('is_state', 'on') | list | count }}
+        # basement_count: list your basement light entity IDs here
+        basement_count: >-
+          {% set checked = [
+            'light.YOUR_BASEMENT_POTS',
+            'light.YOUR_BASEMENT_BED_LIGHT',
+            'light.YOUR_MEDIA_ROOM_LIGHT',
+            'light.YOUR_GARAGE_LIGHT'
+          ] %}
+          {{ checked | select('is_state', 'on') | list | count }}
+        lights_summary: >-
+          {% set total = main_floor_count | int + second_floor_count | int + basement_count | int %}
+          {% if total == 0 %}All lights are off.
+          {% else %}
+            {% set parts = [] %}
+            {% if main_floor_count | int > 0 %}
+              {% set parts = parts + ['main floor has ' + main_floor_count | string
+                + ' light' + ('s' if main_floor_count | int != 1 else '') + ' on'] %}
+            {% endif %}
+            {% if second_floor_count | int > 0 %}
+              {% set parts = parts + ['second floor has ' + second_floor_count | string
+                + ' light' + ('s' if second_floor_count | int != 1 else '') + ' on'] %}
+            {% endif %}
+            {% if basement_count | int > 0 %}
+              {% set parts = parts + ['basement has ' + basement_count | string
+                + ' light' + ('s' if basement_count | int != 1 else '') + ' on'] %}
+            {% endif %}
+            {{ parts | join(', ') | capitalize }}.
+          {% endif %}
+        presence_text: >-
+          {% set people = [] %}
+          {% if is_state('YOUR_PERSON_1', 'home') %}
+            {% set people = people + ['YOUR_PERSON_1_NAME'] %}
+          {% endif %}
+          {% if is_state('YOUR_PERSON_2', 'home') %}
+            {% set people = people + ['YOUR_PERSON_2_NAME'] %}
+          {% endif %}
+          {% if people | length == 0 %}Nobody is home.
+          {% elif people | length == 1 %}{{ people[0] }} is home.
+          {% else %}{{ people | join(' and ') }} are home.{% endif %}
+        backyard_text: >-
+          {% if is_state('YOUR_BACKYARD_SENSOR', 'on') %}There is someone in the backyard.
+          {% else %}No one is in the backyard.{% endif %}
+        pet_text: >-
+          {% if is_state('YOUR_PET_SENSOR', 'on') %}YOUR_PET_NAME appears to be outside.
+          {% else %}YOUR_PET_NAME is inside.{% endif %}
+    - service: tts.speak
+      data:
+        cache: false
+        # YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+        media_player_entity_id: YOUR_SONOS_ENTITY
+        message: >-
+          Security check.
+          {% if lock_problem_count | int == 0 %}All locks are secured.
+          {% else %}{{ lock_issues }}. All other locks are secured.{% endif %}
+          {{ garage_text }}
+          {{ lights_summary }}
+          {{ presence_text }} {{ backyard_text }} {{ pet_text }}
+      target:
+        entity_id: tts.piper
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ lights_on | length > 0 }}"
+          sequence:
+            - service: YOUR_IPHONE_NOTIFY
+              data:
+                title: "Secure Check - Lights On"
+                message: "{{ lights_on }}"
+        - conditions:
+            - condition: template
+              value_template: "{{ lights_on | length == 0 }}"
+          sequence:
+            - service: YOUR_IPHONE_NOTIFY
+              data:
+                title: Secure Check
+                message: All lights are off.

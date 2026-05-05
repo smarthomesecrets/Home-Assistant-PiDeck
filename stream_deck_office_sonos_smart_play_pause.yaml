@@ -1,0 +1,41 @@
+# stream_deck_office_sonos_smart_play_pause.yaml
+# Smart play/pause for the office Sonos.
+# Playing: pauses.
+# Paused: resumes.
+# Idle or off: triggers Voice PE into listen mode so you can ask what to play.
+#
+# YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+#   Example: media_player.office_sonos
+#
+# YOUR_VOICE_PE_ENTITY: Office Voice PE assist satellite entity ID
+#   Example: assist_satellite.home_assistant_voice_09852e_assist_satellite
+
+stream_deck_office_sonos_smart_play_pause:
+  alias: Stream Deck Office Sonos Smart Play Pause
+  description: >
+    Playing = pause. Paused = resume. Idle or off = wake Voice PE to ask what to play.
+  mode: single
+  sequence:
+    - choose:
+        - conditions:
+            - condition: state
+              # YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+              entity_id: YOUR_SONOS_ENTITY
+              state: playing
+          sequence:
+            - service: media_player.media_pause
+              target:
+                entity_id: YOUR_SONOS_ENTITY
+        - conditions:
+            - condition: state
+              entity_id: YOUR_SONOS_ENTITY
+              state: paused
+          sequence:
+            - service: media_player.media_play
+              target:
+                entity_id: YOUR_SONOS_ENTITY
+      default:
+        - service: voice_satellite.wake
+          target:
+            # YOUR_VOICE_PE_ENTITY: Office Voice PE assist satellite entity ID
+            entity_id: YOUR_VOICE_PE_ENTITY

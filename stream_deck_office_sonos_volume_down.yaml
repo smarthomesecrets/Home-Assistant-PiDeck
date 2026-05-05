@@ -1,0 +1,15 @@
+# stream_deck_office_sonos_volume_down.yaml
+# Decreases office Sonos volume by one step.
+#
+# YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+#   Example: media_player.office_sonos
+
+stream_deck_office_sonos_volume_down:
+  alias: Stream Deck Office Sonos Volume Down
+  description: Decreases office Sonos volume.
+  mode: single
+  sequence:
+    - service: media_player.volume_down
+      target:
+        # YOUR_SONOS_ENTITY: Office Sonos media player entity ID
+        entity_id: YOUR_SONOS_ENTITY

@@ -1,0 +1,84 @@
+# stream_deck_dnd_toggle.yaml
+# Toggles DND mode by setting the Z-Wave LED colour parameter on smart switches
+# outside the office doors. Red = DND on, white = DND off.
+# Tracks state via input_boolean so the Stream Deck button always reflects reality.
+#
+# REQUIRED: Create this helper in HA before using this script:
+#   Settings > Helpers > Add Helper > Toggle
+#   Name: Stream Deck DND Active
+#   Entity ID: input_boolean.stream_deck_dnd_active
+#
+# REQUIRED: Both switches must be main Z-Wave smart switches (not auxiliary switches).
+# Auxiliary switches in a 3-way setup do not have a controllable LED indicator.
+#
+# Z-Wave parameter details:
+#   Command Class: 112 (Configuration)
+#   Property: 14 (LedColorSet_switch)
+#   Value 0 = white (normal)
+#   Value 1 = red (DND active)
+#
+# YOUR_DND_SWITCH_1: Entity ID of first Z-Wave switch outside office
+#   Find it: Settings > Devices & Services > your switch device > entity ID
+#   Example: switch.main_hall_pots_root
+#
+# YOUR_DND_SWITCH_2: Entity ID of second Z-Wave switch outside office
+#   Find it: Settings > Devices & Services > your switch device > entity ID
+#   Example: switch.landing_light
+
+stream_deck_dnd_toggle:
+  alias: Stream Deck DND Toggle
+  description: >
+    Toggles DND mode. Sets Z-Wave LED colour parameter 14 to red (1) or white (0)
+    on both office door switches. Updates input_boolean.stream_deck_dnd_active to
+    track state for Stream Deck button rendering on startup.
+  mode: single
+  sequence:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.stream_deck_dnd_active
+              state: "off"
+          sequence:
+            - service: zwave_js.set_value
+              data:
+                command_class: "112"
+                property: "14"
+                value: 1
+              target:
+                # YOUR_DND_SWITCH_1: First Z-Wave switch outside office
+                entity_id: YOUR_DND_SWITCH_1
+            - service: zwave_js.set_value
+              data:
+                command_class: "112"
+                property: "14"
+                value: 1
+              target:
+                # YOUR_DND_SWITCH_2: Second Z-Wave switch outside office
+                entity_id: YOUR_DND_SWITCH_2
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.stream_deck_dnd_active
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.stream_deck_dnd_active
+              state: "on"
+          sequence:
+            - service: zwave_js.set_value
+              data:
+                command_class: "112"
+                property: "14"
+                value: 0
+              target:
+                # YOUR_DND_SWITCH_1: First Z-Wave switch outside office
+                entity_id: YOUR_DND_SWITCH_1
+            - service: zwave_js.set_value
+              data:
+                command_class: "112"
+                property: "14"
+                value: 0
+              target:
+                # YOUR_DND_SWITCH_2: Second Z-Wave switch outside office
+                entity_id: YOUR_DND_SWITCH_2
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.stream_deck_dnd_active

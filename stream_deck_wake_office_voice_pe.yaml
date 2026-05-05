@@ -1,0 +1,21 @@
+# stream_deck_wake_office_voice_pe.yaml
+# Triggers the office Voice PE satellite into active listening mode.
+# Uses voice_satellite.wake service — not assist_satellite.start_conversation
+# which returns a 400 error on current HA versions.
+#
+# YOUR_VOICE_PE_ENTITY: Entity ID of your office Voice PE assist satellite
+#   Find it: Settings > Devices & Services > your Voice PE device
+#   Look for the assist_satellite entity
+#   Example: assist_satellite.home_assistant_voice_09852e_assist_satellite
+
+stream_deck_wake_office_voice_pe:
+  alias: Stream Deck Wake Office Voice PE
+  description: >
+    Triggers the office Voice PE satellite into active listening mode
+    using voice_satellite.wake service.
+  mode: single
+  sequence:
+    - service: voice_satellite.wake
+      target:
+        # YOUR_VOICE_PE_ENTITY: Office Voice PE assist satellite entity ID
+        entity_id: YOUR_VOICE_PE_ENTITY

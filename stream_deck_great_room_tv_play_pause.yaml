@@ -1,0 +1,17 @@
+# stream_deck_great_room_tv_play_pause.yaml
+# Toggles play/pause on the great room TV or Apple TV.
+# Works with any media player entity.
+#
+# YOUR_GREAT_ROOM_TV_ENTITY: Great room TV or Apple TV media player entity ID
+#   Find it: Settings > Devices & Services > your Apple TV or TV device
+#   Example: media_player.great_room_apple_tv
+
+stream_deck_great_room_tv_play_pause:
+  alias: Stream Deck Great Room TV Play Pause
+  description: Toggles play/pause on great room TV or Apple TV.
+  mode: single
+  sequence:
+    - service: media_player.media_play_pause
+      target:
+        # YOUR_GREAT_ROOM_TV_ENTITY: Great room TV media player entity ID
+        entity_id: YOUR_GREAT_ROOM_TV_ENTITY

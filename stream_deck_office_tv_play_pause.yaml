@@ -1,0 +1,17 @@
+# stream_deck_office_tv_play_pause.yaml
+# Toggles play/pause on the office Apple TV.
+# Works with any media player entity, not just Apple TV.
+#
+# YOUR_OFFICE_TV_ENTITY: Office TV or Apple TV media player entity ID
+#   Find it: Settings > Devices & Services > your Apple TV or TV device
+#   Example: media_player.office_apple_tv
+
+stream_deck_office_tv_play_pause:
+  alias: Stream Deck Office TV Play Pause
+  description: Toggles play/pause on office TV or Apple TV.
+  mode: single
+  sequence:
+    - service: media_player.media_play_pause
+      target:
+        # YOUR_OFFICE_TV_ENTITY: Office TV media player entity ID
+        entity_id: YOUR_OFFICE_TV_ENTITY

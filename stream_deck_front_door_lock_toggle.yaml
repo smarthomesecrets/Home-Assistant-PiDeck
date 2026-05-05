@@ -1,0 +1,32 @@
+# stream_deck_front_door_lock_toggle.yaml
+# Toggles the front door lock between locked and unlocked.
+# The Stream Deck button reads current lock state and renders
+# a green filled lock icon when locked and orange open lock when unlocked.
+#
+# YOUR_FRONT_DOOR_LOCK: Front door lock entity ID
+#   Find it: Settings > Devices & Services > your lock device
+#   Example: lock.front_door_lock
+
+stream_deck_front_door_lock_toggle:
+  alias: Stream Deck Front Door Lock Toggle
+  description: Toggles front door lock between locked and unlocked.
+  mode: single
+  sequence:
+    - choose:
+        - conditions:
+            - condition: state
+              # YOUR_FRONT_DOOR_LOCK: Front door lock entity ID
+              entity_id: YOUR_FRONT_DOOR_LOCK
+              state: locked
+          sequence:
+            - service: lock.unlock
+              target:
+                entity_id: YOUR_FRONT_DOOR_LOCK
+        - conditions:
+            - condition: state
+              entity_id: YOUR_FRONT_DOOR_LOCK
+              state: unlocked
+          sequence:
+            - service: lock.lock
+              target:
+                entity_id: YOUR_FRONT_DOOR_LOCK
