@@ -3,6 +3,9 @@
 Physical Home Assistant controls using an Elgato Stream Deck MK2 and a Raspberry Pi 5.
 Full build guide at [SmartHomeSecrets.ca](https://www.smarthomesecrets.ca/stream-deck-home-assistant-raspberry-pi).
 
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-blue.png)](https://www.buymeacoffee.com/smarthomesecrets)
+
+
 ---
 
 ## What Is This
